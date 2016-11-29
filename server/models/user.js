@@ -32,6 +32,8 @@ var UserSchema = new mongoose.Schema({
   }]
 });
 
+// UserSchema.methods is an object, where we can add instance methods
+// we use regular functions since arrow functions do not bind "this" keyword. this -> store the individual doc
 UserSchema.methods.toJSON = function() {
   var user = this;
   var userObject = user.toObject();
@@ -39,8 +41,6 @@ UserSchema.methods.toJSON = function() {
   return _.pick(userObject, ['_id', 'email']);
 };
 
-// UserSchema.methods is an object, where we can add instance methods
-// we use regular functions since arrow functions do not bind "this" keyword. this -> store the individual doc
 UserSchema.methods.generateAuthToken = function() {
   var user = this;
   var access = 'auth';
@@ -49,6 +49,24 @@ UserSchema.methods.generateAuthToken = function() {
 
   user.tokens.push({access, token});
   return user.save().then(() => {return token});
+};
+
+// Statics is like methods, but everythings turns into a model method instead of instance methods
+UserSchema.statics.findByToken = function(token) {
+  var User = this; // must be Uppercase because it is a model!
+  var decoded;
+
+  try {
+    decoded = jwt.verify(token, 'abc123'); // verify throws an error if the info does not match!
+  } catch(e) {
+    return Promise.reject();
+  }
+
+  return User.findOne({
+    '_id': decoded._id,
+    'tokens.token': token,
+    'tokens.access': 'auth'
+  });
 };
 
 var User = mongoose.model('User', UserSchema);
