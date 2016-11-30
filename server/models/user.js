@@ -46,7 +46,7 @@ UserSchema.methods.generateAuthToken = function() {
   var user = this;
   var access = 'auth';
 
-  var token = jwt.sign({_id: user._id.toHexString(), access}, 'abc123').toString();
+  var token = jwt.sign({_id: user._id.toHexString(), access}, process.env.JWT_SECRET).toString();
 
   user.tokens.push({access, token});
   return user.save().then(() => {return token});
@@ -65,11 +65,11 @@ UserSchema.methods.removeToken = function(token) {
 
 // Statics is like methods, but everythings turns into a model method instead of instance methods
 UserSchema.statics.findByToken = function(token) {
-  var User = this; // must be Uppercase because it is a model!
+  var User = this; // uppercase because it is a model!
   var decoded;
 
   try {
-    decoded = jwt.verify(token, 'abc123'); // verify throws an error if the info does not match!
+    decoded = jwt.verify(token, process.env.JWT_SECRET); // verify throws an error if the info does not match!
   } catch(e) {
     return Promise.reject();
   }
