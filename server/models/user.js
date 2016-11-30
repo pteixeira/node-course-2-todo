@@ -52,6 +52,17 @@ UserSchema.methods.generateAuthToken = function() {
   return user.save().then(() => {return token});
 };
 
+UserSchema.methods.removeToken = function(token) {
+  var user = this;
+
+  return user.update({
+    $pull: {
+      tokens: {token}
+    }
+  });
+  // $pull -> remove items from an array that match a criteria (mongoose operator)
+};
+
 // Statics is like methods, but everythings turns into a model method instead of instance methods
 UserSchema.statics.findByToken = function(token) {
   var User = this; // must be Uppercase because it is a model!
